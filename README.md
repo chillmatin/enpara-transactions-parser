@@ -1,7 +1,27 @@
-# Enpara Transactions Parser
+<div align="center">
 
-Convert Enpara PDF account statements to CSV, JSON, XLSX, or OFX.
+[![License](https://img.shields.io/badge/license-MIT-blue)](#)
+[![Issues - enpara-transactions-parser](https://img.shields.io/github/issues/chillmatin/enpara-transactions-parser)](https://github.com/chillmatin/enpara-transactions-parser/issues)
+[![GitHub Release](https://img.shields.io/github/v/release/chillmatin/enpara-transactions-parser)](#)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/chillmatin/enpara-transactions-parser)](#)
 
+</div>
+
+&nbsp;
+
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/chillmatin/enpara-transactions-parser/blob/main/docs/assets/logo.png?raw=true">
+    <source media="(prefers-color-scheme: light)" srcset="https://github.com/chillmatin/enpara-transactions-parser/blob/main/docs/assets/logo.png?raw=true">
+    <img alt="matinhuseynzade.com logo" src="https://github.com/chillmatin/enpara-transactions-parser/blob/main/docs/assets/logo.png?raw=true" width=512>
+  </picture>
+</div>
+
+<h3 align="center">
+  <a>Enpara Transactions Parser</a>
+  <br/>
+  Convert Enpara PDF account statements to CSV, JSON, XLSX, or OFX.
+</h3>
 
 ## Quick Start
 
