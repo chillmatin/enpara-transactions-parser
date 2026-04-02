@@ -14,7 +14,7 @@ func ToCSV(statement *models.AccountStatement) ([]byte, error) {
 	writer := csv.NewWriter(&buffer)
 	writer.Comma = ';'
 
-	headers := []string{"Date", "Type", "Merchant", "Description", "Amount", "Balance"}
+	headers := []string{"Tarih", "Hareket tipi", "Açıklama", "İşlem Tutarı", "Bakiye"}
 	if err := writer.Write(headers); err != nil {
 		return nil, fmt.Errorf("write csv headers: %w", err)
 	}
@@ -23,7 +23,6 @@ func ToCSV(statement *models.AccountStatement) ([]byte, error) {
 		row := []string{
 			transaction.Date.Format("02.01.2006"),
 			transaction.Type,
-			transaction.Merchant,
 			transaction.Description,
 			formatTurkishDecimal(transaction.Amount),
 			formatTurkishDecimal(transaction.Balance),

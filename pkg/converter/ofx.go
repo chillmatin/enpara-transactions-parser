@@ -36,7 +36,7 @@ func ToOFX(statement *models.AccountStatement) ([]byte, error) {
 	transactions := make([]ofxStmtTrn, 0, len(statement.Transactions))
 	fallbackDaySequence := make(map[string]int, len(statement.Transactions))
 	for _, tx := range statement.Transactions {
-		name := tx.Merchant
+		name := tx.Type
 		if name == "" {
 			name = tx.Description
 		}
