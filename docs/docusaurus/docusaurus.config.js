@@ -10,8 +10,8 @@ import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'My Site',
-  tagline: 'Dinosaurs are cool',
+  title: 'Enpara Transactions Parser Documentation',
+  tagline: 'Converting Enpara Transactions Report to more useful file formats like csv, json, xlsx, or ofx.',
   favicon: 'img/favicon.ico',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
@@ -20,15 +20,15 @@ const config = {
   },
 
   // Set the production url of your site here
-  url: 'https://your-docusaurus-site.example.com',
+  url: 'https://chillmatin.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/',
+  baseUrl: '/enpara-transactions-parser/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'facebook', // Usually your GitHub org/user name.
-  projectName: 'docusaurus', // Usually your repo name.
+  organizationName: 'chillmatin', // Usually your GitHub org/user name.
+  projectName: 'enpara-transactions-parser', // Usually your repo name.
 
   onBrokenLinks: 'throw',
 
@@ -50,7 +50,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/chillmatin/enpara-transactions-parser/tree/main/docs/',
         },
         blog: {
           showReadingTime: true,
@@ -61,7 +61,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/chillmatin/enpara-transactions-parser/tree/main/docs/',
           // Useful options to enforce blogging best practices
           onInlineTags: 'warn',
           onInlineAuthors: 'warn',
@@ -83,7 +83,7 @@ const config = {
         respectPrefersColorScheme: true,
       },
       navbar: {
-        title: 'My Site',
+        title: 'enpara-transactions-parser',
         logo: {
           alt: 'My Site Logo',
           src: 'img/logo.svg',
@@ -97,7 +97,7 @@ const config = {
           },
           {to: '/blog', label: 'Blog', position: 'left'},
           {
-            href: 'https://github.com/facebook/docusaurus',
+            href: 'https://github.com/chillmatin/enpara-transactions-parser',
             label: 'GitHub',
             position: 'right',
           },
@@ -118,17 +118,17 @@ const config = {
           {
             title: 'Community',
             items: [
-              {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-              },
-              {
-                label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
-              },
+              // {
+              //   label: 'Stack Overflow',
+              //   href: 'https://stackoverflow.com/questions/tagged/docusaurus',
+              // },
+              // {
+              //   label: 'Discord',
+              //   href: 'https://discordapp.com/invite/docusaurus',
+              // },
               {
                 label: 'X',
-                href: 'https://x.com/docusaurus',
+                href: 'https://x.com/chillmatindev',
               },
             ],
           },
@@ -141,12 +141,12 @@ const config = {
               },
               {
                 label: 'GitHub',
-                href: 'https://github.com/facebook/docusaurus',
+                href: 'https://github.com/chillmatin/enpara-transactions-parser',
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+        copyright: `MIT License © ${new Date().getFullYear()}. Built with Docusaurus.`,
       },
       prism: {
         theme: prismThemes.github,
