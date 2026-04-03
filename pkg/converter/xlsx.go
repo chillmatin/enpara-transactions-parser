@@ -13,7 +13,7 @@ func ToXLSX(statement *models.AccountStatement) ([]byte, error) {
 	sheetName := "Transactions"
 	file.SetSheetName(defaultSheet, sheetName)
 
-	headers := []string{"Tarih", "Hareket tipi", "Açıklama", "İşlem Tutarı", "Bakiye"}
+	headers := []string{"Tarih", "Hareket tipi", "Açıklama", "NFC", "İşlem Tutarı", "Bakiye"}
 	for i, header := range headers {
 		cell, err := excelize.CoordinatesToCellName(i+1, 1)
 		if err != nil {
@@ -28,7 +28,7 @@ func ToXLSX(statement *models.AccountStatement) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create header style: %w", err)
 	}
-	if err := file.SetCellStyle(sheetName, "A1", "E1", headerStyle); err != nil {
+	if err := file.SetCellStyle(sheetName, "A1", "F1", headerStyle); err != nil {
 		return nil, fmt.Errorf("apply header style: %w", err)
 	}
 
@@ -44,7 +44,7 @@ func ToXLSX(statement *models.AccountStatement) ([]byte, error) {
 		return nil, fmt.Errorf("create amount style: %w", err)
 	}
 
-	columnWidths := []float64{12, 18, 40, 14, 14}
+	columnWidths := []float64{12, 18, 40, 8, 14, 14}
 
 	for rowIndex, transaction := range statement.Transactions {
 		excelRow := rowIndex + 2
@@ -57,10 +57,13 @@ func ToXLSX(statement *models.AccountStatement) ([]byte, error) {
 		if err := file.SetCellValue(sheetName, fmt.Sprintf("C%d", excelRow), transaction.Description); err != nil {
 			return nil, fmt.Errorf("set description value: %w", err)
 		}
-		if err := file.SetCellValue(sheetName, fmt.Sprintf("D%d", excelRow), transaction.Amount); err != nil {
+		if err := file.SetCellValue(sheetName, fmt.Sprintf("D%d", excelRow), boolToInt(transaction.NFC)); err != nil {
+			return nil, fmt.Errorf("set nfc value: %w", err)
+		}
+		if err := file.SetCellValue(sheetName, fmt.Sprintf("E%d", excelRow), transaction.Amount); err != nil {
 			return nil, fmt.Errorf("set amount value: %w", err)
 		}
-		if err := file.SetCellValue(sheetName, fmt.Sprintf("E%d", excelRow), transaction.Balance); err != nil {
+		if err := file.SetCellValue(sheetName, fmt.Sprintf("F%d", excelRow), transaction.Balance); err != nil {
 			return nil, fmt.Errorf("set balance value: %w", err)
 		}
 		columnWidths[1] = maxFloat(columnWidths[1], float64(len([]rune(transaction.Type))+2))
@@ -72,7 +75,7 @@ func ToXLSX(statement *models.AccountStatement) ([]byte, error) {
 		if err := file.SetCellStyle(sheetName, "A2", fmt.Sprintf("A%d", last), dateStyle); err != nil {
 			return nil, fmt.Errorf("apply date style: %w", err)
 		}
-		if err := file.SetCellStyle(sheetName, "D2", fmt.Sprintf("E%d", last), amountStyle); err != nil {
+		if err := file.SetCellStyle(sheetName, "E2", fmt.Sprintf("F%d", last), amountStyle); err != nil {
 			return nil, fmt.Errorf("apply amount style: %w", err)
 		}
 	}

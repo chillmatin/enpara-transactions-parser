@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/chillmatin/enpara-transactions-parser/pkg/models"
@@ -14,7 +15,7 @@ func ToCSV(statement *models.AccountStatement) ([]byte, error) {
 	writer := csv.NewWriter(&buffer)
 	writer.Comma = ';'
 
-	headers := []string{"Tarih", "Hareket tipi", "Açıklama", "İşlem Tutarı", "Bakiye"}
+	headers := []string{"Tarih", "Hareket tipi", "Açıklama", "NFC", "İşlem Tutarı", "Bakiye"}
 	if err := writer.Write(headers); err != nil {
 		return nil, fmt.Errorf("write csv headers: %w", err)
 	}
@@ -24,6 +25,7 @@ func ToCSV(statement *models.AccountStatement) ([]byte, error) {
 			transaction.Date.Format("02.01.2006"),
 			transaction.Type,
 			transaction.Description,
+			strconv.Itoa(boolToInt(transaction.NFC)),
 			formatTurkishDecimal(transaction.Amount),
 			formatTurkishDecimal(transaction.Balance),
 		}
@@ -65,4 +67,11 @@ func formatTurkishDecimal(value float64) string {
 	}
 
 	return sign + integerPart + "," + decimalPart
+}
+
+func boolToInt(value bool) int {
+	if value {
+		return 1
+	}
+	return 0
 }

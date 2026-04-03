@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,10 +21,22 @@ var supportedFormats = map[string]struct{}{
 	"ofx":  {},
 }
 
+var supportedPDFTypes = map[string]struct{}{
+	parser.PDFTypeAuto: {},
+	parser.PDFType1:    {},
+	parser.PDFType2:    {},
+}
+
 func HandleConvert(c *gin.Context) {
 	format := strings.ToLower(strings.TrimSpace(c.DefaultPostForm("format", "json")))
 	if _, ok := supportedFormats[format]; !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported format"})
+		return
+	}
+
+	pdfType := strings.ToLower(strings.TrimSpace(c.DefaultPostForm("type", parser.PDFTypeAuto)))
+	if _, ok := supportedPDFTypes[pdfType]; !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported type"})
 		return
 	}
 
@@ -61,13 +74,18 @@ func HandleConvert(c *gin.Context) {
 		return
 	}
 
-	data, filename, contentType, err := convertPDF(tempPath, format, uploadedFile.Filename)
+	data, filename, contentType, err := convertPDF(tempPath, format, pdfType, uploadedFile.Filename)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filename))
+	// Use RFC 5987 encoding for internationalized filenames
+	dispositionHeader := fmt.Sprintf("attachment; filename=%q", filename)
+	// Add RFC 5987 filename* for proper Unicode support in filename
+	// Use PathEscape for proper percent-encoding (spaces as %20, not +)
+	dispositionHeader += fmt.Sprintf("; filename*=UTF-8''%s", url.PathEscape(filename))
+	c.Header("Content-Disposition", dispositionHeader)
 	c.Data(http.StatusOK, contentType, data)
 }
 
@@ -79,13 +97,8 @@ func HandleHealth(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
-func convertPDF(pdfPath string, format string, originalFilename string) ([]byte, string, string, error) {
-	text, err := parser.ExtractTextFromPDF(pdfPath)
-	if err != nil {
-		return nil, "", "", fmt.Errorf("extract pdf text: %w", err)
-	}
-
-	statement, err := parser.ParseStatement(text)
+func convertPDF(pdfPath string, format string, pdfType string, originalFilename string) ([]byte, string, string, error) {
+	statement, err := parser.ParseStatementFromPDF(pdfPath, parser.ParseOptions{PDFType: pdfType})
 	if err != nil {
 		return nil, "", "", fmt.Errorf("parse statement: %w", err)
 	}

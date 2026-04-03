@@ -60,10 +60,33 @@ After obtaining binaries, there are two ways you can use this tool: `enpara-api`
    ./enpara-cli "1- Enpara Hesap Hareketleri.pdf" --format ofx
    ```
 
-5. Set output file name:
+5. Choose PDF parser type (default: auto):
+   ```sh
+   ./enpara-cli "1- Enpara Hesap Hareketleri.pdf" --type auto
+   ./enpara-cli "1- Enpara Hesap Hareketleri.pdf" --type type1
+   ./enpara-cli "1- Enpara Hesap Hareketleri.pdf" --type type2
+   ```
+
+6. Set output file name:
    ```sh
    ./enpara-cli "1- Enpara Hesap Hareketleri.pdf" --format csv --output my.csv
    ```
+
+## PDF Types
+
+- `type1`: Manual statement layout (existing parser behavior).
+- `type2`: Automatic monthly statement layout with columns `Tarih`, `Açıklama`, `Tutar`, `Bakiye`.
+- `auto`: Detects layout from PDF text and chooses `type1` or `type2`.
+
+For `type2`, an `NFC` field is included in JSON/CSV/XLSX outputs as `1` or `0`.
+
+## API Parameters
+
+`POST /api/v1/convert` multipart form fields:
+
+- `file` (required): PDF file.
+- `format` (optional): `json|csv|xlsx|ofx` (default `json`).
+- `pdf_type` (optional): `auto|type1|type2` (default `auto`).
 
 
 ## Usage and Help

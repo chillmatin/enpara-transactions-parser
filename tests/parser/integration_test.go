@@ -43,9 +43,9 @@ func TestParseRealPDFIntegration(t *testing.T) {
 }
 
 func TestParseProvidedTmpPDFAccountHolder(t *testing.T) {
-	pdfPath := "../../tmp/transaction.pdf"
+	pdfPath := "../../tmp/manual.pdf"
 	if _, err := os.Stat(pdfPath); err != nil {
-		t.Skip("tmp/transaction.pdf is not available")
+		t.Skip("tmp/manual.pdf is not available")
 	}
 
 	text, err := parser.ExtractTextFromPDF(pdfPath)
@@ -53,7 +53,7 @@ func TestParseProvidedTmpPDFAccountHolder(t *testing.T) {
 		t.Fatalf("ExtractTextFromPDF returned error: %v", err)
 	}
 
-	statement, err := parser.ParseStatement(text)
+	statement, err := parser.ParseStatementWithOptions(text, parser.ParseOptions{PDFType: parser.PDFType1})
 	if err != nil {
 		t.Fatalf("ParseStatement returned error: %v", err)
 	}
@@ -69,5 +69,90 @@ func TestParseProvidedTmpPDFAccountHolder(t *testing.T) {
 
 	if len(statement.Transactions) == 0 {
 		t.Fatal("expected at least one transaction")
+	}
+}
+
+func TestParseProvidedAutomaticPDFAutoDetect(t *testing.T) {
+	pdfPath := "../../tmp/automatic.pdf"
+	if _, err := os.Stat(pdfPath); err != nil {
+		t.Skip("tmp/automatic.pdf is not available")
+	}
+
+	text, err := parser.ExtractTextFromPDF(pdfPath)
+	if err != nil {
+		t.Fatalf("ExtractTextFromPDF returned error: %v", err)
+	}
+
+	statement, err := parser.ParseStatement(text)
+	if err != nil {
+		t.Fatalf("ParseStatement returned error: %v", err)
+	}
+
+	if len(statement.Transactions) == 0 {
+		t.Fatal("expected at least one transaction")
+	}
+}
+
+func TestParseProvidedAutomaticPDFType2(t *testing.T) {
+	pdfPath := "../../tmp/automatic.pdf"
+	if _, err := os.Stat(pdfPath); err != nil {
+		t.Skip("tmp/automatic.pdf is not available")
+	}
+
+	text, err := parser.ExtractTextFromPDF(pdfPath)
+	if err != nil {
+		t.Fatalf("ExtractTextFromPDF returned error: %v", err)
+	}
+
+	statement, err := parser.ParseStatementWithOptions(text, parser.ParseOptions{PDFType: parser.PDFType2})
+	if err != nil {
+		t.Fatalf("ParseStatementWithOptions(type2) returned error: %v", err)
+	}
+
+	if len(statement.Transactions) == 0 {
+		t.Fatal("expected at least one transaction")
+	}
+}
+
+func TestParseProvidedAutomaticPDFNFCByIcon(t *testing.T) {
+	pdfPath := "../../tmp/automatic.pdf"
+	if _, err := os.Stat(pdfPath); err != nil {
+		t.Skip("tmp/automatic.pdf is not available")
+	}
+
+	statement, err := parser.ParseStatementFromPDF(pdfPath, parser.ParseOptions{PDFType: parser.PDFType2})
+	if err != nil {
+		t.Fatalf("ParseStatementFromPDF(type2) returned error: %v", err)
+	}
+
+	if len(statement.Transactions) == 0 {
+		t.Fatal("expected at least one transaction")
+	}
+
+	var odealFound bool
+	var transferFound bool
+
+	for _, tx := range statement.Transactions {
+		if strings.Contains(strings.ToUpper(tx.Description), "ODEAL//YASEMIN YILDI") {
+			odealFound = true
+			if !tx.NFC {
+				t.Fatalf("expected NFC=true for ODEAL row, got false: %q", tx.Description)
+			}
+		}
+
+		normalizedDescription := strings.ToUpper(tx.Description)
+		if strings.Contains(normalizedDescription, "DEBIT KARTTAN ENPARA DEBIT KARTA") {
+			transferFound = true
+			if tx.NFC {
+				t.Fatalf("expected NFC=false for transfer row, got true: %q", tx.Description)
+			}
+		}
+	}
+
+	if !odealFound {
+		t.Fatal("could not find ODEAL sample row for NFC assertion")
+	}
+	if !transferFound {
+		t.Fatal("could not find transfer sample row for NFC assertion")
 	}
 }

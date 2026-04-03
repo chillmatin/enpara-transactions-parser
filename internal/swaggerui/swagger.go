@@ -56,6 +56,11 @@ const openAPISpecJSON = `{
                     "type": "string",
                     "enum": ["json", "csv", "xlsx", "ofx"],
                     "default": "json"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["auto", "type1", "type2"],
+                    "default": "auto"
                   }
                 }
               }

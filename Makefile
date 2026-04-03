@@ -1,17 +1,18 @@
-.PHONY: help run-cli build build-cli build-api release release-linux-amd64 release-linux-arm64 release-darwin-amd64 release-darwin-arm64 release-windows-amd64 test test-clean test-parser test-converter test-integration fmt vet tidy verify clean convert-json convert-csv convert-xlsx convert-ofx convert-all
+.PHONY: help run-cli build build-cli build-api release release-linux-amd64 release-linux-arm64 release-darwin-amd64 release-darwin-arm64 release-windows-amd64 test test-clean test-parser test-converter test-integration fmt vet tidy verify clean convert-json convert-csv convert-xlsx convert-ofx convert-all convert-manual convert-automatic
 
 GO := go
 BIN_DIR := bin
 DIST_DIR := dist
-PDF ?= ./tmp/transaction.pdf
+PDF ?= ./tmp/manual.pdf
 OUT_DIR ?= ./tmp
 FORMAT ?= json
+PDF_TYPE ?= auto
 OUTPUT ?= $(OUT_DIR)/statement.$(FORMAT)
 LDFLAGS := -s -w
 
 help:
 	@echo "Targets:"
-	@echo "  run-cli            Convert PDF using CLI (PDF, FORMAT, OUTPUT vars)"
+	@echo "  run-cli            Convert PDF using CLI (PDF, FORMAT, OUTPUT, PDF_TYPE vars)"
 	@echo "  build              Build both binaries"
 	@echo "  release            Build CLI and API binaries for Linux/macOS/Windows"
 	@echo "  release-<platform> Build release binaries for one platform"
@@ -24,11 +25,20 @@ help:
 	@echo "  vet                Run go vet"
 	@echo "  tidy               Run go mod tidy"
 	@echo "  verify             fmt + vet + test-clean"
-	@echo "  convert-all        Generate json/csv/xlsx/ofx from sample PDF"
+	@echo "  convert-all        Generate json/csv/xlsx/ofx from PDF"
+	@echo "  convert-manual     Generate all outputs from ./tmp/manual.pdf (type1)"
+	@echo "  convert-automatic  Generate all outputs from ./tmp/automatic.pdf (type2)"
 	@echo "  clean              Remove built binaries and generated outputs"
+	@echo ""
+	@echo "Variables (override with make VAR=value):"
+	@echo "  PDF=$(PDF)"
+	@echo "  FORMAT=$(FORMAT)"
+	@echo "  PDF_TYPE=$(PDF_TYPE)"
+	@echo "  OUT_DIR=$(OUT_DIR)"
+	@echo "  OUTPUT=$(OUTPUT)"
 
 run-cli:
-	$(GO) run cmd/cli/main.go "$(PDF)" -f "$(FORMAT)" -o "$(OUTPUT)"
+	$(GO) run cmd/cli/main.go "$(PDF)" -f "$(FORMAT)" --type "$(PDF_TYPE)" -o "$(OUTPUT)"
 
 build: build-cli build-api
 
@@ -95,18 +105,24 @@ tidy:
 verify: fmt vet test-clean
 
 convert-json:
-	$(GO) run cmd/cli/main.go "$(PDF)" -f json -o "$(OUT_DIR)/statement.json"
+	$(GO) run cmd/cli/main.go "$(PDF)" -f json --type "$(PDF_TYPE)" -o "$(OUT_DIR)/statement.json"
 
 convert-csv:
-	$(GO) run cmd/cli/main.go "$(PDF)" -f csv -o "$(OUT_DIR)/statement.csv"
+	$(GO) run cmd/cli/main.go "$(PDF)" -f csv --type "$(PDF_TYPE)" -o "$(OUT_DIR)/statement.csv"
 
 convert-xlsx:
-	$(GO) run cmd/cli/main.go "$(PDF)" -f xlsx -o "$(OUT_DIR)/statement.xlsx"
+	$(GO) run cmd/cli/main.go "$(PDF)" -f xlsx --type "$(PDF_TYPE)" -o "$(OUT_DIR)/statement.xlsx"
 
 convert-ofx:
-	$(GO) run cmd/cli/main.go "$(PDF)" -f ofx -o "$(OUT_DIR)/statement.ofx"
+	$(GO) run cmd/cli/main.go "$(PDF)" -f ofx --type "$(PDF_TYPE)" -o "$(OUT_DIR)/statement.ofx"
 
 convert-all: convert-json convert-csv convert-xlsx convert-ofx
+
+convert-manual:
+	$(MAKE) convert-all PDF=./tmp/manual.pdf PDF_TYPE=type1
+
+convert-automatic:
+	$(MAKE) convert-all PDF=./tmp/automatic.pdf PDF_TYPE=type2
 
 clean:
 	rm -rf $(BIN_DIR)

@@ -1,6 +1,7 @@
 package parser_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/chillmatin/enpara-transactions-parser/pkg/parser"
@@ -144,5 +145,81 @@ func TestParseStatementAccountHolderFromAdSoyad(t *testing.T) {
 
 	if statement.AccountHolder != "Test User" {
 		t.Fatalf("unexpected account holder: %q", statement.AccountHolder)
+	}
+}
+
+func TestParseStatementType2WithNFC(t *testing.T) {
+	pdfText := strings.Join([]string{
+		"Enpara.com Vadesiz TL hesabınızın Mart - 2026 dönemindeki hareketlerinin detayı aşağıda bulunmaktadır.",
+		"Tarih",
+		"Açıklama",
+		"Tutar",
+		"Bakiye",
+		"03/03/26",
+		"Encard Harcaması, Temassiz Kafe IZMIR TR",
+		"- 145,00 TL",
+		"14.903,78 TL",
+		"04/03/26",
+		"Gelen Transfer, Maas odemesi",
+		"5.000,00 TL",
+		"19.903,78 TL",
+	}, "\n")
+
+	statement, err := parser.ParseStatementWithOptions(pdfText, parser.ParseOptions{PDFType: parser.PDFType2})
+	if err != nil {
+		t.Fatalf("ParseStatementWithOptions(type2) returned error: %v", err)
+	}
+
+	if len(statement.Transactions) != 2 {
+		t.Fatalf("unexpected transaction count: %d", len(statement.Transactions))
+	}
+
+	first := statement.Transactions[0]
+	if !first.NFC {
+		t.Fatal("expected first transaction NFC=true")
+	}
+	if first.Amount != -145.0 {
+		t.Fatalf("unexpected amount: %v", first.Amount)
+	}
+
+	second := statement.Transactions[1]
+	if second.NFC {
+		t.Fatal("expected second transaction NFC=false")
+	}
+	if second.Amount != 5000.0 {
+		t.Fatalf("unexpected second amount: %v", second.Amount)
+	}
+}
+
+func TestParseStatementAutoDetectsType2(t *testing.T) {
+	pdfText := strings.Join([]string{
+		"Enpara.com Vadesiz TL hesabınızın Mart - 2026 dönemindeki hareketlerinin detayı aşağıda bulunmaktadır.",
+		"Tarih",
+		"Açıklama",
+		"Tutar",
+		"Bakiye",
+		"10/03/26",
+		"Diğer, Test Islem",
+		"- 10,00 TL",
+		"90,00 TL",
+	}, "\n")
+
+	statement, err := parser.ParseStatement(pdfText)
+	if err != nil {
+		t.Fatalf("ParseStatement auto-detect returned error: %v", err)
+	}
+
+	if len(statement.Transactions) != 1 {
+		t.Fatalf("unexpected transaction count: %d", len(statement.Transactions))
+	}
+	if got := statement.Transactions[0].Date.Format("02.01.2006"); got != "10.03.2026" {
+		t.Fatalf("unexpected parsed date: %s", got)
+	}
+}
+
+func TestParseStatementRejectsUnknownPDFType(t *testing.T) {
+	_, err := parser.ParseStatementWithOptions("", parser.ParseOptions{PDFType: "type99"})
+	if err == nil {
+		t.Fatal("expected error for unsupported pdf type")
 	}
 }

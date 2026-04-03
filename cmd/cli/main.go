@@ -14,6 +14,7 @@ import (
 func main() {
 	var formatFlag string
 	var outputFlag string
+	var pdfTypeFlag string
 
 	rootCmd := &cobra.Command{
 		Use:   "enpara-cli <input.pdf>",
@@ -24,16 +25,18 @@ func main() {
 			"  enpara-cli ./tmp/transaction.pdf",
 			"  enpara-cli ./tmp/transaction.pdf --format csv",
 			"  enpara-cli ./tmp/transaction.pdf -f ofx -o ./tmp/statement.ofx",
+			"  enpara-cli ./tmp/automatic.pdf --type type2 -f json",
 		}, "\n"),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inputPath := args[0]
-			return runConversion(inputPath, formatFlag, outputFlag)
+			return runConversion(inputPath, formatFlag, outputFlag, pdfTypeFlag)
 		},
 	}
 
 	rootCmd.Flags().StringVarP(&formatFlag, "format", "f", "csv", "Output format (csv|json|xlsx|ofx)")
 	rootCmd.Flags().StringVarP(&outputFlag, "output", "o", "", "Output file path (default: <input-base>.<format>)")
+	rootCmd.Flags().StringVarP(&pdfTypeFlag, "type", "t", parser.PDFTypeAuto, "Parser type (auto|type1|type2)")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -41,18 +44,22 @@ func main() {
 	}
 }
 
-func runConversion(inputPath string, format string, outputPath string) error {
+func runConversion(inputPath string, format string, outputPath string, pdfType string) error {
 	format = strings.ToLower(strings.TrimSpace(format))
 	if format == "" {
 		format = "csv"
 	}
 
-	text, err := parser.ExtractTextFromPDF(inputPath)
-	if err != nil {
-		return fmt.Errorf("extract text from pdf: %w", err)
+	pdfType = strings.ToLower(strings.TrimSpace(pdfType))
+	if pdfType == "" {
+		pdfType = parser.PDFTypeAuto
+	}
+	if pdfType != parser.PDFTypeAuto && pdfType != parser.PDFType1 && pdfType != parser.PDFType2 {
+		return fmt.Errorf("unsupported pdf type %q (supported: auto, type1, type2)", pdfType)
 	}
 
-	statement, err := parser.ParseStatement(text)
+	fmt.Printf("PDF Type: %s\n", pdfType)
+	statement, err := parser.ParseStatementFromPDF(inputPath, parser.ParseOptions{PDFType: pdfType})
 	if err != nil {
 		return fmt.Errorf("parse statement: %w", err)
 	}

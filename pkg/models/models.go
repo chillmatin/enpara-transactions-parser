@@ -7,6 +7,7 @@ type Transaction struct {
 	Type          string    `json:"type"`
 	Description   string    `json:"description"`
 	Merchant      string    `json:"merchant"`
+	NFC           bool      `json:"nfc"`
 	Amount        float64   `json:"amount"`
 	Balance       float64   `json:"balance"`
 	DailySequence int       `json:"daily_sequence"`

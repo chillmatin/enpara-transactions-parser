@@ -10,6 +10,7 @@ type exportJSONTransaction struct {
 	Date        string  `json:"Tarih"`
 	Type        string  `json:"Hareket tipi"`
 	Description string  `json:"Açıklama"`
+	NFC         int     `json:"NFC"`
 	Amount      float64 `json:"İşlem Tutarı"`
 	Balance     float64 `json:"Bakiye"`
 }
@@ -21,6 +22,7 @@ func ToJSON(statement *models.AccountStatement) ([]byte, error) {
 			Date:        tx.Date.Format("02.01.2006"),
 			Type:        tx.Type,
 			Description: tx.Description,
+			NFC:         boolToInt(tx.NFC),
 			Amount:      tx.Amount,
 			Balance:     tx.Balance,
 		})
