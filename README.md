@@ -86,7 +86,7 @@ For `type2`, an `NFC` field is included in JSON/CSV/XLSX outputs as `1` or `0`.
 
 - `file` (required): PDF file.
 - `format` (optional): `json|csv|xlsx|ofx` (default `json`).
-- `pdf_type` (optional): `auto|type1|type2` (default `auto`).
+- `type` (optional): `auto|type1|type2` (default `auto`).
 
 
 ## Usage and Help
@@ -109,12 +109,28 @@ Show API help:
 
 ## Build for All Platforms
 
-To build binaries for all supported OS/architectures:
+Generate release artifacts:
 ```sh
 make release
-ls dist/
 ```
-Binaries are in the `dist/` folder.
+
+Artifacts are written to `dist/`.
+
+## Verify Release Integrity and Authenticity
+
+Assume you downloaded the release files into one folder.
+
+1. Create a local keyring from the bundled public key and verify the checksum signature:
+   ```sh
+   gpg --no-default-keyring --keyring ./release-public-key.gpg --verify CHECKSUMS.sha256.asc CHECKSUMS.sha256
+   ```
+
+2. Verify file integrity:
+   ```sh
+   sha256sum -c CHECKSUMS.sha256
+   ```
+
+The first check confirms the checksums were signed by the release key without adding it to your normal keyring. The second check confirms the zip contents match the published checksums.
 
 
 ## Need Help?

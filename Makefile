@@ -1,4 +1,4 @@
-.PHONY: help run-cli build build-cli build-api release release-linux-amd64 release-linux-arm64 release-darwin-amd64 release-darwin-arm64 release-windows-amd64 test test-clean test-parser test-converter test-integration fmt vet tidy verify clean convert-json convert-csv convert-xlsx convert-ofx convert-all convert-manual convert-automatic
+.PHONY: help run-cli build build-cli build-api pre-release release release-linux-amd64 release-linux-arm64 release-darwin-amd64 release-darwin-arm64 release-windows-amd64 release-archives release-clean-binaries release-checksums release-sign test test-clean test-parser test-converter test-integration fmt vet tidy verify clean convert-json convert-csv convert-xlsx convert-ofx convert-all convert-manual convert-automatic
 
 GO := go
 BIN_DIR := bin
@@ -14,8 +14,7 @@ help:
 	@echo "Targets:"
 	@echo "  run-cli            Convert PDF using CLI (PDF, FORMAT, OUTPUT, PDF_TYPE vars)"
 	@echo "  build              Build both binaries"
-	@echo "  release            Build CLI and API binaries for Linux/macOS/Windows"
-	@echo "  release-<platform> Build release binaries for one platform"
+	@echo "  release            Run verify, build, archive, checksum, and signing steps"
 	@echo "  test               Run all tests"
 	@echo "  test-clean         Clear test cache, then test"
 	@echo "  test-parser        Run parser tests only"
@@ -36,7 +35,7 @@ help:
 	@echo "  PDF_TYPE=$(PDF_TYPE)"
 	@echo "  OUT_DIR=$(OUT_DIR)"
 	@echo "  OUTPUT=$(OUTPUT)"
-
+	@echo ""
 run-cli:
 	$(GO) run cmd/cli/main.go "$(PDF)" -f "$(FORMAT)" --type "$(PDF_TYPE)" -o "$(OUTPUT)"
 
@@ -50,7 +49,12 @@ build-api:
 	mkdir -p $(BIN_DIR)
 	$(GO) build -o $(BIN_DIR)/enpara-api cmd/api/main.go
 
-release: release-linux-amd64 release-linux-arm64 release-darwin-amd64 release-darwin-arm64 release-windows-amd64
+pre-release: verify
+	@echo "Verification completed"
+
+release: pre-release release-linux-amd64 release-linux-arm64 release-darwin-amd64 release-darwin-arm64 release-windows-amd64 release-archives release-clean-binaries release-checksums release-sign
+	@echo "Release artifacts generated in $(DIST_DIR)/"
+	@echo "Produced: enpara-*.zip, CHECKSUMS.sha256, CHECKSUMS.sha256.asc"
 
 release-linux-amd64:
 	mkdir -p $(DIST_DIR)
@@ -76,6 +80,44 @@ release-windows-amd64:
 	mkdir -p $(DIST_DIR)
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -trimpath -ldflags "$(LDFLAGS)" -o $(DIST_DIR)/enpara-cli-windows-amd64.exe ./cmd/cli
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -trimpath -ldflags "$(LDFLAGS)" -o $(DIST_DIR)/enpara-api-windows-amd64.exe ./cmd/api
+
+release-archives:
+	@mkdir -p $(DIST_DIR)
+	@cd $(DIST_DIR) && \
+	zip -q enpara-linux-amd64.zip enpara-cli-linux-amd64 enpara-api-linux-amd64 && \
+	zip -q enpara-linux-arm64.zip enpara-cli-linux-arm64 enpara-api-linux-arm64 && \
+	zip -q enpara-darwin-amd64.zip enpara-cli-darwin-amd64 enpara-api-darwin-amd64 && \
+	zip -q enpara-darwin-arm64.zip enpara-cli-darwin-arm64 enpara-api-darwin-arm64 && \
+	zip -q enpara-windows-amd64.zip enpara-cli-windows-amd64.exe enpara-api-windows-amd64.exe
+	@echo "✓ Release archives created in $(DIST_DIR)/"
+
+release-clean-binaries:
+	@rm -f \
+		$(DIST_DIR)/enpara-cli-linux-amd64 \
+		$(DIST_DIR)/enpara-api-linux-amd64 \
+		$(DIST_DIR)/enpara-cli-linux-arm64 \
+		$(DIST_DIR)/enpara-api-linux-arm64 \
+		$(DIST_DIR)/enpara-cli-darwin-amd64 \
+		$(DIST_DIR)/enpara-api-darwin-amd64 \
+		$(DIST_DIR)/enpara-cli-darwin-arm64 \
+		$(DIST_DIR)/enpara-api-darwin-arm64 \
+		$(DIST_DIR)/enpara-cli-windows-amd64.exe \
+		$(DIST_DIR)/enpara-api-windows-amd64.exe
+	@echo "✓ Intermediate release binaries removed from $(DIST_DIR)/"
+
+release-checksums:
+	@cd $(DIST_DIR) && \
+	sha256sum enpara-*.zip > CHECKSUMS.sha256 && \
+	cat CHECKSUMS.sha256
+	@echo "✓ Checksums generated: $(DIST_DIR)/CHECKSUMS.sha256"
+
+release-sign:
+	@cd $(DIST_DIR) && \
+	gpg --batch --yes --detach-sign --armor CHECKSUMS.sha256
+	@echo "✓ Release signed: $(DIST_DIR)/CHECKSUMS.sha256.asc"
+	@echo "Users can verify with:"
+	@echo "  gpg --verify CHECKSUMS.sha256.asc"
+	@echo "  sha256sum -c CHECKSUMS.sha256"
 
 test:
 	$(GO) test ./...
